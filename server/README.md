@@ -10,13 +10,13 @@ npm install
 
 ### Run App
 
-Firs run
+Firs run to start typescript compiler
 
 ```bash
 npm run watch
 ```
 
-to start typescript compiler then
+then
 
 ```bash
 npm run dev

@@ -38,19 +38,56 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
-  @Mutation(() => User)
+  @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
     @Ctx() ctx: MyContext
-  ) {
+  ): Promise<UserResponse> {
+    // validating inputs
+    if (options.username.length <= 2) {
+      return {
+        errors: [
+          {
+            field: "username",
+            message: "length must be grater than 2"
+          }
+        ]
+      };
+    }
+    if (options.password.length <= 2) {
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "length must be grater than 2"
+          }
+        ]
+      };
+    }
     // creating and saving user to db
     const hashedPassword = await argon2.hash(options.password);
     const user = ctx.em.create(User, {
       username: options.username,
       password: hashedPassword
     });
-    await ctx.em.persistAndFlush(user);
-    return user;
+
+    try {
+      await ctx.em.persistAndFlush(user);
+    } catch (error) {
+      // duplicate username error
+      if (error.code === "23505" || error.details.includes("already exists")) {
+        return {
+          errors: [
+            {
+              field: "username",
+              message: "username already taken"
+            }
+          ]
+        };
+      }
+    }
+
+    return { user };
   }
 
   @Mutation(() => UserResponse)
@@ -59,7 +96,6 @@ export class UserResolver {
     @Ctx() ctx: MyContext
   ): Promise<UserResponse> {
     // login user to db
-
     const user = await ctx.em.findOne(User, { username: options.username });
     if (!user) {
       return {
@@ -84,8 +120,6 @@ export class UserResolver {
       };
     }
 
-    return {
-      user
-    };
+    return { user };
   }
 }

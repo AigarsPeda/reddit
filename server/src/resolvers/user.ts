@@ -6,6 +6,7 @@ import {
   InputType,
   Mutation,
   ObjectType,
+  Query,
   Resolver
 } from "type-graphql";
 import { MyContext } from "../types";
@@ -38,6 +39,20 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  async me(@Ctx() ctx: MyContext) {
+    // you ar not logged in
+    if (!ctx.req.session.userId) {
+      return null;
+    }
+
+    // if you have cookie saved in browser find user with tad id
+    // setting cookie in login function and register function
+    const user = await ctx.em.findOne(User, { id: ctx.req.session.userId });
+
+    return user;
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
@@ -87,6 +102,11 @@ export class UserResolver {
       }
     }
 
+    // store user id session
+    // this will set cookie on the user
+    // keep them logged in
+    ctx.req.session.userId = user.id;
+
     return { user };
   }
 
@@ -119,6 +139,11 @@ export class UserResolver {
         ]
       };
     }
+
+    // store user id session
+    // this will set cookie on the user
+    // keep them logged in
+    ctx.req.session.userId = user.id;
 
     return { user };
   }

@@ -1,4 +1,3 @@
-import { MyContext } from "./types";
 import "reflect-metadata";
 import microConfig from "./mikro-orm.config";
 import express from "express";

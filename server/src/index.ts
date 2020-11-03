@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import microConfig from "./mikro-orm.config";
 import express from "express";
+import cors from "cors";
 import { MikroORM } from "@mikro-orm/core";
 import { __prod__ } from "./constants";
 import { ApolloServer } from "apollo-server-express";
@@ -24,6 +25,7 @@ const main = async () => {
   const RedisStore = connectRedis(session);
   const redisClient = redis.createClient();
 
+  app.use(cors({ origin: "http://localhost:3000", credentials: true }));
   app.use(
     session({
       name: "qid",
@@ -53,7 +55,7 @@ const main = async () => {
 
   apolloServer.applyMiddleware({
     app,
-    cors: { origin: "http://localhost:3000", credentials: true }
+    cors: false
   });
 
   app.listen(PORT, () => {

@@ -1,22 +1,33 @@
 import React from "react";
-import { ThemeProvider, CSSReset, ColorModeProvider } from "@chakra-ui/core";
 
-// components
-import NavBar from "../components/NavBar";
-
+// ui
+import { ThemeProvider, CSSReset } from "@chakra-ui/core";
 import theme from "../theme";
 
-function MyApp({ Component, pageProps }) {
+// urql
+import { createClient, Provider } from "urql";
+
+// components
+import Header from "../components/Header";
+
+const client = createClient({
+  url: "http://localhost:8000/graphql",
+  // needed for cookie
+  fetchOptions: {
+    credentials: "include"
+  }
+});
+
+const MyApp = ({ Component, pageProps }: any) => {
   return (
-    <ThemeProvider theme={theme}>
-      <ColorModeProvider>
+    <Provider value={client}>
+      <ThemeProvider theme={theme}>
         <CSSReset />
-        // navbar shows up in every page
-        <NavBar />
+        <Header />
         <Component {...pageProps} />
-      </ColorModeProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </Provider>
   );
-}
+};
 
 export default MyApp;

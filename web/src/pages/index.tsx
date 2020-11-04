@@ -1,9 +1,12 @@
+import { Link } from "@chakra-ui/core";
 import React from "react";
 
-const Index = () => (
-  <div>
-    <h1>Hello World!</h1>
-  </div>
-);
+const Index = () => {
+  return (
+    <div>
+      <h1>Hello World!</h1>
+    </div>
+  );
+};
 
 export default Index;

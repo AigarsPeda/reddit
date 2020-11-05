@@ -1,13 +1,54 @@
-import { Box, Button, Flex, Heading, Link, Text } from "@chakra-ui/core";
 import React from "react";
+import { Button, Flex, Heading, Link, Text } from "@chakra-ui/core";
+import NextLink from "next/link";
+import { useMeQuery } from "../generated/graphql";
 
-const MenuItems = ({ children }) => (
+const MenuItems = ({ children }: any) => (
   <Text mt={{ base: 4, md: 0 }} mr={6} display="block">
     {children}
   </Text>
 );
 
 const Header: React.FC = (props) => {
+  const [{ data, fetching }] = useMeQuery();
+
+  let body;
+
+  // data is loading
+  if (fetching) {
+    body = null;
+    // user no logged in
+  } else if (!data?.me) {
+    body = (
+      <Flex align="center">
+        <MenuItems>
+          <NextLink href="/login">
+            <Link>login</Link>
+          </NextLink>
+        </MenuItems>
+        <Button bg="transparent" border="1px">
+          <NextLink href="/register">
+            <Link>Create account </Link>
+          </NextLink>
+        </Button>
+      </Flex>
+    );
+    // user is logged in
+  } else {
+    body = (
+      <Flex align="center">
+        <Heading as="h4" size="md" mr={4} letterSpacing={"0.05rem"}>
+          {data.me.username}
+        </Heading>
+        <Button bg="transparent" border="1px">
+          <NextLink href="/">
+            <Link>Log Out!</Link>
+          </NextLink>
+        </Button>
+      </Flex>
+    );
+  }
+
   return (
     <Flex
       as="nav"
@@ -15,38 +56,19 @@ const Header: React.FC = (props) => {
       justify="space-between"
       wrap="wrap"
       padding="1.5rem"
-      bg="teal.500"
+      bg="#2D3748"
       color="white"
       {...props}
     >
       <Flex align="center" mr={5}>
-        <Heading as="h1" size="lg" letterSpacing={"-.1rem"}>
-          Reddit
+        <Heading as="h1" size="lg" letterSpacing={"0.05rem"}>
+          <NextLink href="/">
+            <Link>Reddit</Link>
+          </NextLink>
         </Heading>
       </Flex>
 
-      <Box
-        display="flex"
-        width={{ sm: "full", md: "auto" }}
-        alignItems="center"
-        flexGrow={1}
-        justifyContent="space-between"
-      >
-        <Flex>
-          <MenuItems>
-            <Link href="/">Home</Link>
-          </MenuItems>
-          <MenuItems>
-            <Link href="/login">login</Link>
-          </MenuItems>
-        </Flex>
-
-        <Box>
-          <Button bg="transparent" border="1px">
-            <Link href="/register">Create account</Link>
-          </Button>
-        </Box>
-      </Box>
+      {body}
     </Flex>
   );
 };

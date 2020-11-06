@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Flex, Heading, Link, Text } from "@chakra-ui/core";
 import NextLink from "next/link";
-import { useMeQuery } from "../generated/graphql";
+import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 
 const MenuItems = ({ children }: any) => (
   <Text mt={{ base: 4, md: 0 }} mr={6} display="block">
@@ -10,6 +10,7 @@ const MenuItems = ({ children }: any) => (
 );
 
 const Header: React.FC = (props) => {
+  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
   const [{ data, fetching }] = useMeQuery();
 
   let body;
@@ -40,10 +41,13 @@ const Header: React.FC = (props) => {
         <Heading as="h4" size="md" mr={4} letterSpacing={"0.05rem"}>
           {data.me.username}
         </Heading>
-        <Button bg="transparent" border="1px">
-          <NextLink href="/">
-            <Link>Log Out!</Link>
-          </NextLink>
+        <Button
+          bg="transparent"
+          border="1px"
+          onClick={() => logout()}
+          isLoading={logoutFetching}
+        >
+          Log Out!
         </Button>
       </Flex>
     );

@@ -1,7 +1,6 @@
-import { Link } from "@chakra-ui/core";
 import React from "react";
 
-const Index = () => {
+const Index: React.FC = () => {
   return (
     <div>
       <h1>Hello World!</h1>

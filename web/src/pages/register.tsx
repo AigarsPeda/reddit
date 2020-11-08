@@ -1,4 +1,5 @@
 import React from "react";
+import { useRouter } from "next/router";
 import { Box, Button } from "@chakra-ui/core";
 import { Form, Formik } from "formik";
 
@@ -13,6 +14,7 @@ import { useRegisterMutation } from "../generated/graphql";
 type registerProps = {};
 
 const Register: React.FC<registerProps> = () => {
+  const router = useRouter();
   const [, register] = useRegisterMutation();
   return (
     <Wrapper variant="small">
@@ -25,6 +27,9 @@ const Register: React.FC<registerProps> = () => {
           });
           if (response.data?.register.errors) {
             setErrors(toErrorMap(response.data.register.errors));
+          } else if (response.data?.register.user) {
+            // worked
+            router.push("/");
           }
         }}
       >
@@ -47,7 +52,7 @@ const Register: React.FC<registerProps> = () => {
             </Box>
             <Button
               type="submit"
-              variantColor="teal"
+              variantColor="blue"
               mt={4}
               isLoading={isSubmitting}
             >

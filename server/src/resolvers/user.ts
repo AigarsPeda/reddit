@@ -4,7 +4,6 @@ import {
   Arg,
   Ctx,
   Field,
-  InputType,
   Mutation,
   ObjectType,
   Query,
@@ -13,15 +12,8 @@ import {
 import { MyContext } from "../types";
 import argon2 from "argon2";
 import { COOKIE_NAME } from "../constants";
-// import { EntityManager } from "@mikro-orm/postgresql";
-
-@InputType()
-class UsernamePasswordInput {
-  @Field()
-  username: string;
-  @Field()
-  password: string;
-}
+import { UsernamePasswordInput } from "./UsernamePasswordInput";
+import { validateRegister } from "../utils/validateRegister";
 
 @ObjectType()
 class FieldError {
@@ -42,6 +34,12 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  // @Mutation(() => Boolean)
+  // async forgotPassword(@Arg("email") email: string, @Ctx() ctx: MyContext) {
+  //   const user = await ctx.em.findOne(User, { email: email });
+  //   return true;
+  // }
+
   @Query(() => User, { nullable: true })
   async me(@Ctx() ctx: MyContext) {
     // you ar not logged in
@@ -62,41 +60,20 @@ export class UserResolver {
     @Ctx() ctx: MyContext
   ): Promise<UserResponse> {
     // validating inputs
-    if (options.username.length <= 2) {
-      return {
-        errors: [
-          {
-            field: "username",
-            message: "length must be grater than 2"
-          }
-        ]
-      };
+    const errors = validateRegister(options);
+    if (errors) {
+      return { errors };
     }
-    if (options.password.length <= 2) {
-      return {
-        errors: [
-          {
-            field: "password",
-            message: "length must be grater than 2"
-          }
-        ]
-      };
-    }
+
     // creating and saving user to db
     const hashedPassword = await argon2.hash(options.password);
     const user = ctx.em.create(User, {
       username: options.username,
+      email: options.email,
       password: hashedPassword
     });
-    // let user;
+
     try {
-      // const result = await (ctx.em as EntityManager).createQueryBuilder(User).getKnexQuery().insert({
-      //   username: options.username,
-      //   password: hashedPassword,
-      //   created_at: new Date(),
-      //   updated_at: new Date()
-      // }).returning("*");
-      // user = result[0]
       await ctx.em.persistAndFlush(user);
     } catch (error) {
       // duplicate username error
@@ -122,11 +99,17 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
+    @Arg("usernameOrEmail") usernameOrEmail: string,
+    @Arg("password") password: string,
     @Ctx() ctx: MyContext
   ): Promise<UserResponse> {
     // login user to db
-    const user = await ctx.em.findOne(User, { username: options.username });
+    const user = await ctx.em.findOne(
+      User,
+      usernameOrEmail.includes("@")
+        ? { email: usernameOrEmail }
+        : { username: usernameOrEmail }
+    );
     if (!user) {
       return {
         errors: [
@@ -138,7 +121,7 @@ export class UserResolver {
       };
     }
     // get users password from db an compare it to entered password
-    const valid = await argon2.verify(user.password, options.password);
+    const valid = await argon2.verify(user.password, password);
     if (!valid) {
       return {
         errors: [

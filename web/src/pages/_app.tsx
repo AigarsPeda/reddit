@@ -1,9 +1,7 @@
-import { CSSReset, ThemeProvider } from "@chakra-ui/core";
-import Head from "next/head";
 import React from "react";
-// components
-import Header from "../components/Header";
+import Head from "next/head";
 import theme from "../theme";
+import { CSSReset, ThemeProvider } from "@chakra-ui/core";
 
 const MyApp = ({ Component, pageProps }: any) => {
   return (
@@ -12,7 +10,6 @@ const MyApp = ({ Component, pageProps }: any) => {
       <Head>
         <link rel="shortcut icon" href="/favicon.png" />
       </Head>
-      <Header />
       <Component {...pageProps} />
     </ThemeProvider>
   );

@@ -79,6 +79,9 @@ export class UserResolver {
     user.password = await argon2.hash(newPassword);
     await ctx.em.persistAndFlush(user);
 
+    //log in user after change password
+    ctx.req.session.userId = user.id;
+
     return { user };
   }
 

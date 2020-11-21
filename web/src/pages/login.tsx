@@ -1,6 +1,7 @@
 import React from "react";
+import NextLink from "next/link";
 import { useRouter } from "next/router";
-import { Box, Button } from "@chakra-ui/core";
+import { Box, Button, Flex, Link } from "@chakra-ui/core";
 import { Form, Formik } from "formik";
 
 // urql
@@ -53,14 +54,22 @@ const Login: React.FC<registerProps> = () => {
                 autoComplete="off"
               />
             </Box>
-            <Button
-              type="submit"
-              variantColor="blue"
-              mt={4}
-              isLoading={isSubmitting}
-            >
-              Login
-            </Button>
+
+            <Box textAlign="right">
+              <Button
+                type="submit"
+                variantColor="blue"
+                mt={4}
+                isLoading={isSubmitting}
+              >
+                Login
+              </Button>
+              <Box mt={2}>
+                <NextLink href="/forgot-password">
+                  <Link>Forgot Password?</Link>
+                </NextLink>
+              </Box>
+            </Box>
           </Form>
         )}
       </Formik>

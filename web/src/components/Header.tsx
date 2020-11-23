@@ -63,6 +63,9 @@ const Header: React.FC = (props) => {
   return (
     <Flex
       as="nav"
+      position="sticky"
+      top={0}
+      zIndex={10}
       align="center"
       justify="space-between"
       wrap="wrap"

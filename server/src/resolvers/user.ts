@@ -15,6 +15,7 @@ import { UsernamePasswordInput } from "./UsernamePasswordInput";
 import { validateRegister } from "../utils/validateRegister";
 import { sendEmail } from "../utils/sendEmail";
 import { v4 } from "uuid";
+import { getConnection } from "typeorm";
 
 @ObjectType()
 class FieldError {
@@ -65,7 +66,8 @@ export class UserResolver {
       };
     }
 
-    const user = await ctx.em.findOne(User, { id: parseInt(userId) });
+    const userIdNum = parseInt(userId);
+    const user = await User.findOne(userIdNum);
     if (!user) {
       return {
         errors: [
@@ -77,8 +79,10 @@ export class UserResolver {
       };
     }
 
-    user.password = await argon2.hash(newPassword);
-    await ctx.em.persistAndFlush(user);
+    await User.update(
+      { id: userIdNum },
+      { password: await argon2.hash(newPassword) }
+    );
 
     // deleted when the token has been used up
     await ctx.redis.del(key);
@@ -91,7 +95,8 @@ export class UserResolver {
 
   @Mutation(() => Boolean)
   async forgotPassword(@Arg("email") email: string, @Ctx() ctx: MyContext) {
-    const user = await ctx.em.findOne(User, { email: email });
+    // if search field is no primary key you should say { where: { email } }
+    const user = await User.findOne({ where: { email } });
     if (!user) {
       // email is not in the db
       // do nothing
@@ -123,35 +128,46 @@ export class UserResolver {
 
     // if you have cookie saved in browser find user with tad id
     // setting cookie in login function and register function
-    const user = await ctx.em.findOne(User, { id: ctx.req.session.userId });
-
+    const user = await User.findOne(ctx.req.session.userId);
     return user;
   }
 
   @Mutation(() => UserResponse)
   async register(
-    @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
-    @Ctx() ctx: MyContext
+    @Arg("options") options: UsernamePasswordInput,
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    // validating inputs
     const errors = validateRegister(options);
     if (errors) {
       return { errors };
     }
 
-    // creating and saving user to db
     const hashedPassword = await argon2.hash(options.password);
-    const user = ctx.em.create(User, {
-      username: options.username,
-      email: options.email,
-      password: hashedPassword
-    });
-
+    let user;
     try {
-      await ctx.em.persistAndFlush(user);
-    } catch (error) {
-      // duplicate username error
-      if (error.code === "23505" || error.details.includes("already exists")) {
+      // first variant
+
+      // User.create({
+      //   username: options.username,
+      //   email: options.email,
+      //   password: hashedPassword
+      // }).save()
+
+      // second variant
+      const result = await getConnection()
+        .createQueryBuilder()
+        .insert()
+        .into(User)
+        .values({
+          username: options.username,
+          email: options.email,
+          password: hashedPassword
+        })
+        .returning("*")
+        .execute();
+      user = result.raw[0];
+    } catch (err) {
+      if (err.code === "23505" || err.details.includes("already exists")) {
         return {
           errors: [
             {
@@ -164,9 +180,9 @@ export class UserResolver {
     }
 
     // store user id session
-    // this will set cookie on the user
+    // this will set a cookie on the user
     // keep them logged in
-    ctx.req.session.userId = user.id;
+    req.session.userId = user.id;
 
     return { user };
   }
@@ -175,26 +191,23 @@ export class UserResolver {
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
-    @Ctx() ctx: MyContext
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
-    // login user to db
-    const user = await ctx.em.findOne(
-      User,
+    const user = await User.findOne(
       usernameOrEmail.includes("@")
-        ? { email: usernameOrEmail }
-        : { username: usernameOrEmail }
+        ? { where: { email: usernameOrEmail } }
+        : { where: { username: usernameOrEmail } }
     );
     if (!user) {
       return {
         errors: [
           {
             field: "usernameOrEmail",
-            message: "username doesn't exists"
+            message: "that username doesn't exist"
           }
         ]
       };
     }
-    // get users password from db an compare it to entered password
     const valid = await argon2.verify(user.password, password);
     if (!valid) {
       return {
@@ -207,19 +220,18 @@ export class UserResolver {
       };
     }
 
-    // store user id session
-    // this will set cookie on the user
-    // keep them logged in
-    ctx.req.session.userId = user.id;
+    req.session.userId = user.id;
 
-    return { user };
+    return {
+      user
+    };
   }
 
   @Mutation(() => Boolean)
-  logout(@Ctx() ctx: MyContext) {
+  logout(@Ctx() { req, res }: MyContext) {
     return new Promise((resolve) =>
-      ctx.req.session.destroy((err) => {
-        ctx.res.clearCookie(COOKIE_NAME);
+      req.session.destroy((err: any) => {
+        res.clearCookie(COOKIE_NAME);
         if (err) {
           console.log(err);
           resolve(false);

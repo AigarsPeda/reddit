@@ -3,6 +3,8 @@ import Head from "next/head";
 import theme from "../theme";
 import { CSSReset, ThemeProvider } from "@chakra-ui/core";
 
+import "../styles/styles.css";
+
 const MyApp = ({ Component, pageProps }: any) => {
   return (
     <ThemeProvider theme={theme}>

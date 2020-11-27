@@ -2,14 +2,13 @@ import React from "react";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { withUrqlClient } from "next-urql";
 import { usePostsQuery } from "../generated/graphql";
-import Header from "../components/Header";
+import Layout from "../components/Layout";
 
 const Index: React.FC = () => {
   const [{ data }] = usePostsQuery();
 
   return (
-    <div>
-      <Header />
+    <Layout>
       {data ? (
         data.posts.map((post) => {
           return <div key={post.id}>{post.title}</div>;
@@ -19,7 +18,7 @@ const Index: React.FC = () => {
           <h2>Loading...</h2>
         </div>
       )}
-    </div>
+    </Layout>
   );
 };
 

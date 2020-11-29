@@ -4,11 +4,13 @@ import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
   InputType,
   Int,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware
 } from "type-graphql";
 import { Post } from "../entities/Post";
@@ -22,8 +24,12 @@ class PostInput {
   text: string;
 }
 
-@Resolver()
+@Resolver(Post)
 export class PostResolver {
+  @FieldResolver(() => String)
+  textSnippet(@Root() root: Post) {
+    return root.text.slice(0, 56);
+  }
   // if cursor not pasted in grab new posts depending on limit
   // after that from lest post in that list take createdAt
   // past in to query and get older posts how many depends on

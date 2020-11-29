@@ -1,3 +1,4 @@
+import { getConnection } from "typeorm";
 import { isAuth } from "./../middleware/isAuth";
 import {
   Arg,
@@ -23,10 +24,28 @@ class PostInput {
 
 @Resolver()
 export class PostResolver {
+  // if cursor not pasted in grab new posts depending on limit
+  // after that from lest post in that list take createdAt
+  // past in to query and get older posts how many depends on
+  // limit witch is pasted in
   @Query(() => [Post])
-  posts(): Promise<Post[]> {
-    // find and return all posts
-    return Post.find();
+  async posts(
+    @Arg("limit") limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+  ): Promise<Post[]> {
+    const realLimit = Math.min(50, limit);
+    const qb = getConnection()
+      .getRepository(Post)
+      .createQueryBuilder("p")
+      .orderBy('"createdAt"', "DESC")
+      .take(realLimit);
+
+    // adding property if there are pasted in cursor
+    if (cursor) {
+      qb.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) });
+    }
+
+    return qb.getMany();
   }
 
   @Query(() => Post, { nullable: true })

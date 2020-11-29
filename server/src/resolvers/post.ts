@@ -30,7 +30,7 @@ export class PostResolver {
   // limit witch is pasted in
   @Query(() => [Post])
   async posts(
-    @Arg("limit") limit: number,
+    @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
   ): Promise<Post[]> {
     const realLimit = Math.min(50, limit);

@@ -1,21 +1,13 @@
 import React from "react";
-import { useRouter } from "next/router";
+import InputField from "../components/InputField";
+import Layout from "../components/Layout";
 import { Box, Button } from "@chakra-ui/core";
 import { Form, Formik } from "formik";
-
-// urql
 import { withUrqlClient } from "next-urql";
-import { createUrqlClient } from "../utils/createUrqlClient";
-
-// utils
-import { toErrorMap } from "../utils/toErrorsMap";
-
-// components
-import Wrapper from "../components/Wrapper";
-import InputField from "../components/InputField";
-
-// graphql-codegen
+import { useRouter } from "next/router";
 import { useRegisterMutation } from "../generated/graphql";
+import { createUrqlClient } from "../utils/createUrqlClient";
+import { toErrorMap } from "../utils/toErrorsMap";
 
 type registerProps = {};
 
@@ -23,7 +15,7 @@ const Register: React.FC<registerProps> = () => {
   const router = useRouter();
   const [, register] = useRegisterMutation();
   return (
-    <Wrapper variant="small">
+    <Layout variant="small">
       <Formik
         initialValues={{ email: "", username: "", password: "" }}
         onSubmit={async (value, { setErrors }) => {
@@ -74,7 +66,7 @@ const Register: React.FC<registerProps> = () => {
           </Form>
         )}
       </Formik>
-    </Wrapper>
+    </Layout>
   );
 };
 

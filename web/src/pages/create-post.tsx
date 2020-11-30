@@ -12,6 +12,7 @@ import { useIsAuth } from "../utils/hooks/useIsAuth";
 const CreatePost: React.FC = () => {
   const router = useRouter();
 
+  // checks if you are log in
   useIsAuth();
 
   const [, createPost] = useCreatePostMutation();

@@ -8,7 +8,9 @@ export const useIsAuth = () => {
 
   useEffect(() => {
     if (!fetching && !data?.me) {
-      router.replace("/login");
+      // after log in go to path were you was before
+      // redirect to log in
+      router.replace("/login?next=" + router.pathname);
     }
   }, [data, router, fetching]);
 };

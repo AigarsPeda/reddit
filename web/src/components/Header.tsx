@@ -1,6 +1,6 @@
 import React from "react";
 import NextLink from "next/link";
-import { Badge, Button, Flex, Heading, Link, Text } from "@chakra-ui/core";
+import { Badge, Box, Button, Flex, Heading, Link, Text } from "@chakra-ui/core";
 import { useLogoutMutation, useMeQuery } from "../generated/graphql";
 import { isServer } from "../utils/isServer";
 

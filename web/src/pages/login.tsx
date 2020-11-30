@@ -1,21 +1,13 @@
 import React from "react";
 import NextLink from "next/link";
+import Layout from "../components/Layout";
+import InputField from "../components/InputField";
 import { useRouter } from "next/router";
-import { Box, Button, Flex, Link } from "@chakra-ui/core";
+import { Box, Button, Link } from "@chakra-ui/core";
 import { Form, Formik } from "formik";
-
-// urql
 import { withUrqlClient } from "next-urql";
 import { createUrqlClient } from "../utils/createUrqlClient";
-
-// utils
 import { toErrorMap } from "../utils/toErrorsMap";
-
-// components
-import Wrapper from "../components/Wrapper";
-import InputField from "../components/InputField";
-
-// graphql-codegen
 import { useLoginMutation } from "../generated/graphql";
 
 type registerProps = {};
@@ -24,7 +16,7 @@ const Login: React.FC<registerProps> = () => {
   const router = useRouter();
   const [, login] = useLoginMutation();
   return (
-    <Wrapper variant="small">
+    <Layout variant="small">
       <Formik
         initialValues={{ usernameOrEmail: "", password: "" }}
         onSubmit={async (value, { setErrors }) => {
@@ -33,7 +25,11 @@ const Login: React.FC<registerProps> = () => {
             setErrors(toErrorMap(response.data.login.errors));
           } else if (response.data?.login.user) {
             // worked
-            router.push("/");
+            if (typeof router.query.next === "string") {
+              router.push(router.query.next);
+            } else {
+              router.push("/");
+            }
           }
         }}
       >
@@ -58,7 +54,8 @@ const Login: React.FC<registerProps> = () => {
             <Box textAlign="right">
               <Button
                 type="submit"
-                variantColor="blue"
+                bg="#2D3748"
+                color="#F7FAFC"
                 mt={4}
                 isLoading={isSubmitting}
               >
@@ -73,7 +70,7 @@ const Login: React.FC<registerProps> = () => {
           </Form>
         )}
       </Formik>
-    </Wrapper>
+    </Layout>
   );
 };
 

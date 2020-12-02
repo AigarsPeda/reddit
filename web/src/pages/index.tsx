@@ -7,14 +7,14 @@ import { Box, Button, Flex, Heading, Stack, Text } from "@chakra-ui/core";
 
 const Index: React.FC = () => {
   const [variables, setVariables] = useState({
-    limit: 10,
+    limit: 15,
     cursor: null as null | string
   });
   const [{ data, fetching }] = usePostsQuery({
-    variables: variables
+    variables
   });
 
-  console.log(data);
+  // console.log(variables);
 
   if (!fetching && !data) {
     return (
@@ -28,7 +28,7 @@ const Index: React.FC = () => {
     <Layout>
       {data && !fetching ? (
         <Stack spacing={8}>
-          {data.posts.map((post) => {
+          {data.posts.posts.map((post) => {
             return (
               <Box key={post.id} p={5} shadow="md" borderWidth="1px">
                 <Heading fontSize="xl">{post.title}</Heading>
@@ -42,7 +42,7 @@ const Index: React.FC = () => {
           <h2>Loading...</h2>
         </div>
       )}
-      {data && (
+      {data && data.posts.hasMore ? (
         <Flex>
           <Button
             isLoading={fetching}
@@ -51,14 +51,14 @@ const Index: React.FC = () => {
             onClick={() =>
               setVariables({
                 limit: variables.limit,
-                cursor: data.posts[data.posts.length - 1].createdAt
+                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt
               })
             }
           >
             Load More
           </Button>
         </Flex>
-      )}
+      ) : null}
     </Layout>
   );
 };

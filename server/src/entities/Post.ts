@@ -38,6 +38,7 @@ export class Post extends BaseEntity {
   // for OneToMany relationship
   // OneToMany in User.ts and ManyToOne here user.posts is
   // fields name in User.ts
+  @Field()
   @ManyToOne(() => User, (user) => user.posts)
   creator: User;
 

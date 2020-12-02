@@ -8,6 +8,7 @@ import {
   InputType,
   Int,
   Mutation,
+  ObjectType,
   Query,
   Resolver,
   Root,
@@ -24,34 +25,79 @@ class PostInput {
   text: string;
 }
 
+@ObjectType()
+class PaginatedPosts {
+  @Field(() => [Post])
+  posts: Post[];
+  @Field()
+  hasMore: boolean;
+}
+
 @Resolver(Post)
 export class PostResolver {
   @FieldResolver(() => String)
   textSnippet(@Root() root: Post) {
     return root.text.slice(0, 56);
   }
+
   // if cursor not pasted in grab new posts depending on limit
   // after that from lest post in that list take createdAt
   // past in to query and get older posts how many depends on
   // limit witch is pasted in
-  @Query(() => [Post])
+  @Query(() => PaginatedPosts)
   async posts(
     @Arg("limit", () => Int) limit: number,
     @Arg("cursor", () => String, { nullable: true }) cursor: string | null
-  ): Promise<Post[]> {
+  ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
-    const qb = getConnection()
-      .getRepository(Post)
-      .createQueryBuilder("p")
-      .orderBy('"createdAt"', "DESC")
-      .take(realLimit);
+    const realLimitPlusOne = realLimit + 1;
 
-    // adding property if there are pasted in cursor
+    const replacements: any[] = [realLimitPlusOne];
+
     if (cursor) {
-      qb.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) });
+      replacements.push(new Date(parseInt(cursor)));
     }
 
-    return qb.getMany();
+    const posts = await getConnection().query(
+      `
+      select p.*, 
+      json_build_object(
+        'id', u.id,
+        'username', u.username,
+        'email', u.email,
+        'createdAt', u."createdAt"
+      ) creator
+      from post p
+      inner join public.user u on u.id = p."creatorId"
+      ${cursor ? `where p."createdAt" < $2` : ""}
+      order by p."createdAt" DESC
+      limit $1
+    `,
+      replacements
+    );
+
+    // const qb = getConnection()
+    //   .getRepository(Post)
+    //   .createQueryBuilder("p")
+    //   .innerJoinAndSelect("p.creator", "u", 'u.id = p."creatorId"')
+    //   .orderBy('p."createdAt"', "DESC")
+    //   .take(realLimitPlusOne);
+
+    // adding property if there are pasted in cursor
+    // if (cursor) {
+    //   qb.where('p."createdAt" < :cursor', {
+    //     cursor: new Date(parseInt(cursor))
+    //   });
+    // }
+
+    // const posts = await qb.getMany();
+
+    console.log(posts);
+
+    return {
+      posts: posts.slice(0, realLimit),
+      hasMore: posts.length === realLimitPlusOne
+    };
   }
 
   @Query(() => Post, { nullable: true })

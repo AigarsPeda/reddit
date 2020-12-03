@@ -1,3 +1,4 @@
+import { Updoot } from "./Updoot";
 import { Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,
@@ -34,6 +35,9 @@ export class User extends BaseEntity {
   // field man should match field in Posts.ts
   // @ManyToOne(() => User, (user) => user.posts) in Posts.ts
   posts: Post[];
+
+  @OneToMany(() => Updoot, (updoot) => updoot.user)
+  updoots: Updoot[];
 
   @Field(() => String)
   @CreateDateColumn()

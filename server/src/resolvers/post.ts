@@ -40,6 +40,32 @@ export class PostResolver {
     return root.text.slice(0, 56);
   }
 
+  @Mutation(() => Boolean)
+  @UseMiddleware(isAuth)
+  async vote(
+    @Arg("postId", () => Int) postId: number,
+    @Arg("value", () => Int) value: number,
+    @Ctx() { req }: MyContext
+  ) {
+    const isUpDoot = value !== -1;
+    const realValue = isUpDoot ? 1 : -1;
+    const { userId } = req.session;
+
+    await getConnection().query(
+      `
+      START TRANSACTION;
+      insert into updoot ("userId", "postId", value)
+      values (${userId},${postId},${realValue});
+      update post
+      set points = points + ${realValue}
+      where id = ${postId};
+      COMMIT;
+    `
+    );
+
+    return true;
+  }
+
   // if cursor not pasted in grab new posts depending on limit
   // after that from lest post in that list take createdAt
   // past in to query and get older posts how many depends on
@@ -65,7 +91,8 @@ export class PostResolver {
         'id', u.id,
         'username', u.username,
         'email', u.email,
-        'createdAt', u."createdAt"
+        'createdAt', u."createdAt",
+        'updatedAt', u."updatedAt"
       ) creator
       from post p
       inner join public.user u on u.id = p."creatorId"
@@ -75,24 +102,6 @@ export class PostResolver {
     `,
       replacements
     );
-
-    // const qb = getConnection()
-    //   .getRepository(Post)
-    //   .createQueryBuilder("p")
-    //   .innerJoinAndSelect("p.creator", "u", 'u.id = p."creatorId"')
-    //   .orderBy('p."createdAt"', "DESC")
-    //   .take(realLimitPlusOne);
-
-    // adding property if there are pasted in cursor
-    // if (cursor) {
-    //   qb.where('p."createdAt" < :cursor', {
-    //     cursor: new Date(parseInt(cursor))
-    //   });
-    // }
-
-    // const posts = await qb.getMany();
-
-    console.log(posts);
 
     return {
       posts: posts.slice(0, realLimit),

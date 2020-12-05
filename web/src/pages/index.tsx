@@ -13,6 +13,7 @@ import {
   Stack,
   Text
 } from "@chakra-ui/core";
+import UpdootSection from "../components/UpdootSection";
 
 const Index: React.FC = () => {
   const [variables, setVariables] = useState({
@@ -40,26 +41,7 @@ const Index: React.FC = () => {
           {data.posts.posts.map((post) => {
             return (
               <Flex key={post.id} p={5} shadow="md" borderWidth="1px">
-                <Flex
-                  flexDirection="column"
-                  align="center"
-                  justifyContent="center"
-                  mr={4}
-                >
-                  <IconButton
-                    icon="chevron-up"
-                    size="md"
-                    aria-label="up vote"
-                    background="none"
-                  />
-                  <p>{post.points}</p>
-                  <IconButton
-                    icon="chevron-down"
-                    size="md"
-                    aria-label="down vote"
-                    background="none"
-                  />
-                </Flex>
+                <UpdootSection post={post} />
                 <Box>
                   <Heading fontSize="xl">{post.title}</Heading>
                   <Text>Author: {post.creator.username}</Text>

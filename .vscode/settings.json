@@ -6,6 +6,7 @@
     "chakra",
     "codegen",
     "dedup",
+    "downdoot",
     "graphcache",
     "typeorm",
     "updoots",

@@ -23,11 +23,11 @@ const UpdootSection: React.FC<UpdootSectionProps> = (props) => {
           });
           setLoadingState("not-loading");
         }}
+        variantColor={post.voteStatus === 1 ? "green" : undefined}
         isLoading={loadingState === "updoot-loading"}
         icon="chevron-up"
         size="md"
         aria-label="up vote"
-        background="none"
       />
       <p>{post.points}</p>
       <IconButton
@@ -39,11 +39,11 @@ const UpdootSection: React.FC<UpdootSectionProps> = (props) => {
           });
           setLoadingState("not-loading");
         }}
+        variantColor={post.voteStatus === -1 ? "red" : undefined}
         isLoading={loadingState === "downdoot-loading"}
         icon="chevron-down"
         size="md"
         aria-label="down vote"
-        background="none"
       />
     </Flex>
   );
